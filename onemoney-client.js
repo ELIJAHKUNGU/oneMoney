@@ -11,12 +11,21 @@ TCSde5JleqIrjVT+066VY/uIU5pa5vR2w+Xd33C+R5Ai2Hf4Ah6wykgKQHg4EJF3
 RYJO3LoF1V0Yf/61rVztrvG8OcU2/9neGdp1wRK4mVrzzRl55c9YXVLmaSqHTxoh
 CwIDAQAB
 -----END PUBLIC KEY-----`.trim();
-//   merchantId: '1883151315996622850',
-  // encryptKeyId: '6c12e964cd59',
+
+
+const howzitPublicKey = `-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuNiac4lHvaf7u1c+hGmV
+uFPeY6yNUStDB9CqS+LqafsMxqrYFVpnQ1Zyjyz476SvYuW2z/OrTKI0xi2NbJIW
+IPEEn/Wk5MEFRNX5gGymkTtYsrtBaBy6Y3ItNUn01DmkErFiUlS6RQoi920GTmgc
+JtcjYqyrfQ5N5wQutX+R80GEKWrIZgXkUtldFZN2rOQW3e68TfXTV3yUZ9/c1sbc
+TCSde5JleqIrjVT+066VY/uIU5pa5vR2w+Xd33C+R5Ai2Hf4Ah6wykgKQHg4EJF3
+RYJO3LoF1V0Yf/61rVztrvG8OcU2/9neGdp1wRK4mVrzzRl55c9YXVLmaSqHTxoh
+CwIDAQAB
+-----END PUBLIC KEY-----`
 class OneMoneyClient {
   constructor(privateKey) {
     try {
-      this.encryptionUtil = new EncryptionUtil(privateKey, oneMoneyPublicKey);
+      this.encryptionUtil = new EncryptionUtil(privateKey, howzitPublicKey);
       this.config = {
         encryptKeyId: '6c12e964cd59',
         merchantId: '1883151315996622850',
@@ -26,7 +35,7 @@ class OneMoneyClient {
           b2cPayment: 'http://172.28.255.24:8087/api/thirdParty/paying',
           b2cQuery: 'http://172.28.255.24:8087/api/thirdParty/paying/order/check'
         },
-        notifyUrl: 'http://yourdomain.com/onemoney/notify'
+        notifyUrl: 'http://165.227.202.115/onemoney/notify'
       };
     } catch (error) {
       console.error('Client initialization error:', error);
