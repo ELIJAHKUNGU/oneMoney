@@ -28,7 +28,7 @@ class OneMoneyClient {
       this.encryptionUtil = new EncryptionUtil(privateKey, oneMoneyPublicKey);
       this.config = {
         encryptKeyId: '6c12e964cd59',
-        merchantId: '1883151315996622850',
+        merchantId: 'H0wz1+@pp',
         apiEndpoints: {
           c2bPush: 'http://172.28.255.24:8087/api/pay/payment/push',
           c2bQuery: 'http://172.28.255.24:8087/api/pay/payment/order/status/query',
