@@ -3,13 +3,13 @@ const config = require('./config/config');
 const EncryptionUtil = require('./encryption');
 
 const oneMoneyPublicKey = `-----BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuNiac4lHvaf7u1c+hGmV
-uFPeY6yNUStDB9CqS+LqafsMxqrYFVpnQ1Zyjyz476SvYuW2z/OrTKI0xi2NbJIW
-IPEEn/Wk5MEFRNX5gGymkTtYsrtBaBy6Y3ItNUn01DmkErFiUlS6RQoi920GTmgc
-JtcjYqyrfQ5N5wQutX+R80GEKWrIZgXkUtldFZN2rOQW3e68TfXTV3yUZ9/c1sbc
-TCSde5JleqIrjVT+066VY/uIU5pa5vR2w+Xd33C+R5Ai2Hf4Ah6wykgKQHg4EJF3
-RYJO3LoF1V0Yf/61rVztrvG8OcU2/9neGdp1wRK4mVrzzRl55c9YXVLmaSqHTxoh
-CwIDAQAB
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzT00cO3c0GKpFSRA2JTf
+YKiPfwthrG3Q1PRaOEm1rdBkGWEL3120Ukh/OBRPpzSJHgffyivWtdxUIREEFehd
+ARG3Ru/nhehmPbzODLInVUXib6VTmyc+o9NssQwzuqyXtHCpFOAcZUyIliI12MRE
+z3pWRFdU9vutPE7egBdiInzRdm5hC1z809Q/OA4HkosQqpvHF24Tmjfvj97gUY/z
+wrX0dY5PRsIlJjuV1K5zhXu3TDYbbC8Nyclmbsk1AYGS9kQKtJsYWaN4zIM8svz5
+IGT8Mg/FTARGKyhSXDR0lJ3ZvLYdvrVNu1XD5/OR6m+9Z1BbWeYPwXK5tGe9LEH2
+nQIDAQAB
 -----END PUBLIC KEY-----`.trim();
 
 
@@ -25,7 +25,7 @@ CwIDAQAB
 class OneMoneyClient {
   constructor(privateKey) {
     try {
-      this.encryptionUtil = new EncryptionUtil(privateKey, howzitPublicKey);
+      this.encryptionUtil = new EncryptionUtil(privateKey, oneMoneyPublicKey);
       this.config = {
         encryptKeyId: '6c12e964cd59',
         merchantId: '1883151315996622850',
@@ -64,6 +64,9 @@ class OneMoneyClient {
       };
 
       // Make API request
+      console.log("Payload", payload)
+      console.log("endpoint", endpoint)
+
       const response = await axios.post(endpoint, payload);
       return this.processResponse(response.data);
     } catch (error) {
