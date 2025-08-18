@@ -130,7 +130,8 @@ class OneMoneyClient {
       }
       
       // IMPORTANT: Generate signature BEFORE encryption, from original JSON string
-      const businessParamsStr = JSON.stringify(businessParams);
+      // Try sorted keys to match Java serialization order
+      const businessParamsStr = JSON.stringify(businessParams, Object.keys(businessParams).sort());
       const signature = this.encryptionUtil.generateSignature(businessParamsStr);
       const notifyUrl =  "http://165.227.202.115/api/rms/";
 
