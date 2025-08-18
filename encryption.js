@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const CryptoJS = require('crypto-js');
 const NodeRSA = require('node-rsa');
 const { v4: uuidv4 } = require('uuid');
 
@@ -20,59 +21,73 @@ class EncryptionUtil {
   }
 
 
-  // Generate random AES key (256-bit)
+  // Generate random AES key (128-bit for OneMoney)
   generateAesKey() {
-    return crypto.randomBytes(32).toString('base64');
+    return crypto.randomBytes(16).toString('base64'); // 128-bit = 16 bytes
   }
 
-  // AES encrypt data
+  // AES encrypt data using ECB mode as required by OneMoney (matches Java implementation)
   aesEncrypt(data, key) {
     try {
-      const iv = crypto.randomBytes(16);
-      const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(key, 'base64'), iv);
-      let encrypted = cipher.update(data, 'utf8', 'base64');
-      encrypted += cipher.final('base64');
-      return {
-        iv: iv.toString('base64'),
-        encryptedData: encrypted
-      };
+      // Convert base64 key to crypto-js format
+      const keyWordArray = CryptoJS.enc.Base64.parse(key);
+      
+      // Encrypt using AES ECB mode with PKCS7 padding
+      const encrypted = CryptoJS.AES.encrypt(data, keyWordArray, {
+        mode: CryptoJS.mode.ECB,
+        padding: CryptoJS.pad.Pkcs7
+      });
+      
+      // Match Java double Base64 encoding: base64Encoder.encodeToString(payload.getBytes(StandardCharsets.UTF_8))
+      const encryptedBase64 = encrypted.toString();
+      return Buffer.from(encryptedBase64, 'utf8').toString('base64');
     } catch (error) {
       console.error('AES Encryption Error:', error);
       throw error;
     }
   }
 
-  // AES decrypt data
-  aesDecrypt(encryptedData, key, iv) {
+  // AES decrypt data using ECB mode (matches Java implementation)
+  aesDecrypt(encryptedData, key) {
     try {
-      const decipher = crypto.createDecipheriv(
-        'aes-256-cbc', 
-        Buffer.from(key, 'base64'), 
-        Buffer.from(iv, 'base64')
-      );
-      let decrypted = decipher.update(encryptedData, 'base64', 'utf8');
-      decrypted += decipher.final('utf8');
-      return decrypted;
+      // Convert base64 key to crypto-js format
+      const keyWordArray = CryptoJS.enc.Base64.parse(key);
+      
+      // Handle double Base64 decoding to match Java implementation
+      const decodedData = Buffer.from(encryptedData, 'base64').toString('utf8');
+      const cleanedData = decodedData.replace(/\r\n/g, ''); // Match Java: payload.replaceAll("\r\n", "");
+      
+      // Decrypt using AES ECB mode with PKCS7 padding
+      const decrypted = CryptoJS.AES.decrypt(cleanedData, keyWordArray, {
+        mode: CryptoJS.mode.ECB,
+        padding: CryptoJS.pad.Pkcs7
+      });
+      
+      return decrypted.toString(CryptoJS.enc.Utf8);
     } catch (error) {
       console.error('AES Decryption Error:', error);
       throw error;
     }
   }
 
-  // RSA encrypt with OneMoney public key
+  // RSA encrypt with OneMoney public key (matches Java double Base64 encoding)
   rsaEncrypt(data) {
     try {
-      return this.oneMoneyPublicKey.encrypt(data, 'base64');
+      const encrypted = this.oneMoneyPublicKey.encrypt(data, 'base64');
+      // Match Java double Base64 encoding: base64Encoder.encodeToString(secretKey.getBytes(StandardCharsets.UTF_8))
+      return Buffer.from(encrypted, 'utf8').toString('base64');
     } catch (error) {
       console.error('RSA Encryption Error:', error);
       throw error;
     }
   }
 
-  // RSA decrypt with our private key
+  // RSA decrypt with our private key (matches Java implementation)
   rsaDecrypt(encryptedData) {
     try {
-      return this.privateKey.decrypt(encryptedData, 'utf8');
+      // Handle double Base64 decoding to match Java implementation
+      const decodedData = Buffer.from(encryptedData, 'base64').toString('utf8');
+      return this.privateKey.decrypt(decodedData, 'utf8');
     } catch (error) {
       console.error('RSA Decryption Error:', error);
       throw error;
@@ -91,12 +106,36 @@ class EncryptionUtil {
     }
   }
 
-  // Generate timestamp and random string for requests
+  // Generate timestamp and random string for requests (matches Java BaseReqDTO)
   generateRequestMeta() {
     return {
-      timestamp: Date.now(),
-      random: uuidv4()
+      timestamp: Math.floor(Date.now() / 1000) + "000", // Match Java: Instant.now().getEpochSecond() + "000"
+      random: uuidv4().replace(/-/g, '') // Remove dashes like Java UUID.randomUUID().toString()
     };
+  }
+
+  // Encrypt credentials using Triple DES (matches Java Cryptography.encryptCredential)
+  static encryptCredential(credential) {
+    try {
+      // Use Node.js built-in crypto module for Triple DES (matches Java implementation exactly)
+      const crypto = require('crypto');
+      const keyString = "slrhxxsa9k2oqduntt4j9p1a";
+      
+      // Convert key to proper format for 3DES (24 bytes for Triple DES)
+      const keyBytes = Buffer.from(keyString, 'utf8');
+      
+      // Create cipher using DES-EDE3-ECB (Triple DES ECB mode, matches Java TripleDES/ECB/PKCS5Padding)
+      const cipher = crypto.createCipheriv('des-ede3-ecb', keyBytes, null);
+      cipher.setAutoPadding(true); // PKCS5/PKCS7 padding
+      
+      let encrypted = cipher.update(credential, 'utf8', 'base64');
+      encrypted += cipher.final('base64');
+      
+      return encrypted;
+    } catch (error) {
+      console.error('Credential Encryption Error:', error);
+      throw error;
+    }
   }
 }
 

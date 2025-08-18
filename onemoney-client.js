@@ -1,6 +1,9 @@
 const axios = require('axios');
-const config = require('./config/config');
+const FormData = require('form-data');
+const fs = require('fs');
+const path = require('path');
 const EncryptionUtil = require('./encryption');
+const { OneMoneyResponse, OneMoneyCustomer, BaseReqDTO } = require('./models');
 
 const oneMoneyPublicKey = `-----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzT00cO3c0GKpFSRA2JTf
@@ -11,31 +14,31 @@ wrX0dY5PRsIlJjuV1K5zhXu3TDYbbC8Nyclmbsk1AYGS9kQKtJsYWaN4zIM8svz5
 IGT8Mg/FTARGKyhSXDR0lJ3ZvLYdvrVNu1XD5/OR6m+9Z1BbWeYPwXK5tGe9LEH2
 nQIDAQAB
 -----END PUBLIC KEY-----`.trim();
-
-
-const howzitPublicKey = `-----BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuNiac4lHvaf7u1c+hGmV
-uFPeY6yNUStDB9CqS+LqafsMxqrYFVpnQ1Zyjyz476SvYuW2z/OrTKI0xi2NbJIW
-IPEEn/Wk5MEFRNX5gGymkTtYsrtBaBy6Y3ItNUn01DmkErFiUlS6RQoi920GTmgc
-JtcjYqyrfQ5N5wQutX+R80GEKWrIZgXkUtldFZN2rOQW3e68TfXTV3yUZ9/c1sbc
-TCSde5JleqIrjVT+066VY/uIU5pa5vR2w+Xd33C+R5Ai2Hf4Ah6wykgKQHg4EJF3
-RYJO3LoF1V0Yf/61rVztrvG8OcU2/9neGdp1wRK4mVrzzRl55c9YXVLmaSqHTxoh
-CwIDAQAB
------END PUBLIC KEY-----`
+/**
+ * OneMoney API Client - matches Java OneMoneyAPIClient structure
+ * @param {string} baseUrl - This is the BaseURL for the OneMoney API
+ * @param {string} thirdPartyId - This is the ID given to caller from platform
+ * @param {string} thirdPartyCredential - This is the password given to the caller (must be encrypted using EncryptionUtil.encryptCredential)
+ */
 class OneMoneyClient {
-  constructor(privateKey) {
+  constructor(baseUrl, thirdPartyId, thirdPartyCredential, privateKey = null) {
     try {
-      this.encryptionUtil = new EncryptionUtil(privateKey, oneMoneyPublicKey);
-      this.config = {
-        encryptKeyId: '6c12e964cd59',
-        merchantId: 'H0wz1+@pp',
-        apiEndpoints: {
-          c2bPush: 'http://172.28.255.24:8087/api/pay/payment/push',
-          c2bQuery: 'http://172.28.255.24:8087/api/pay/payment/order/status/query',
-          b2cPayment: 'http://172.28.255.24:8087/api/thirdParty/paying',
-          b2cQuery: 'http://172.28.255.24:8087/api/thirdParty/paying/order/check'
-        },
-        notifyUrl: 'http://165.227.202.115/onemoney/notify'
+      this.baseUrl = baseUrl || 'http://172.28.255.24:8087';
+      this.thirdPartyId = thirdPartyId || '1883151315996622850';
+      this.thirdPartyCredential = thirdPartyCredential;
+      
+      if (privateKey) {
+        this.encryptionUtil = new EncryptionUtil(privateKey, oneMoneyPublicKey);
+      }
+      
+      // API endpoints like Java implementation
+      this.endpoints = {
+        registerCustomer: '/api/internal/user/registration',
+        uploadFile: '/api/internal/oss/uploadFile',
+        c2bPush: '/api/pay/payment/push',
+        c2bQuery: '/api/pay/payment/order/status/query',
+        b2cPayment: '/api/thirdParty/paying',
+        b2cQuery: '/api/thirdParty/paying/order/check'
       };
     } catch (error) {
       console.error('Client initialization error:', error);
@@ -43,62 +46,163 @@ class OneMoneyClient {
     }
   }
 
-  async makeRequest(endpoint, businessParams) {
+  /**
+   * Register a new customer - matches Java registerCustomer method
+   * @param {OneMoneyCustomer} oneMoneyCustomer - Customer to be registered
+   * @returns {Promise<OneMoneyResponse>} OneMoney Generalized API response with statusCode (Http status codes) as int and body a JsonString
+   */
+  async registerCustomer(oneMoneyCustomer) {
+    const payload = JSON.stringify(oneMoneyCustomer);
+    const url = `${this.baseUrl}${this.endpoints.registerCustomer}`;
+    console.log(payload, "payload")
+    console.log(url, "url")
+
+    
     try {
+      const response = await axios.post(url, payload, {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'ThirdPartyID': this.thirdPartyId,
+          'Password': this.thirdPartyCredential
+        }
+      });
+      
+      this.log(`Registering new customer: ${oneMoneyCustomer.mobile}`);
+      this.log(`Customer: ${oneMoneyCustomer.mobile} registration response: ${JSON.stringify(response.data)}`);
+      
+      return new OneMoneyResponse(response.status, JSON.stringify(response.data));
+    } catch (error) {
+      console.error('Customer registration failed:', error.response?.data || error.message);
+      const statusCode = error.response?.status || 500;
+      const body = JSON.stringify(error.response?.data || { error: error.message });
+      return new OneMoneyResponse(statusCode, body);
+    }
+  }
+
+  /**
+   * Upload a picture file - matches Java uploadPicture method
+   * @param {string} filePath - Path to the file to upload
+   * @returns {Promise<OneMoneyResponse>} OneMoney response
+   */
+  async uploadPicture(filePath) {
+    try {
+      if (!fs.existsSync(filePath)) {
+        throw new Error(`File not found: ${filePath}`);
+      }
+      
+      const formData = new FormData();
+      formData.append('file', fs.createReadStream(filePath), {
+        filename: path.basename(filePath),
+        contentType: 'application/octet-stream'
+      });
+      
+      const url = `${this.baseUrl}${this.endpoints.uploadFile}`;
+      
+      const response = await axios.post(url, formData, {
+        headers: {
+          ...formData.getHeaders(),
+          'ThirdPartyID': this.thirdPartyId,
+          'Password': this.thirdPartyCredential
+        }
+      });
+      
+      this.log(`Uploading image to OneMoney ${path.basename(filePath)}`);
+      this.log(`Image upload response: ${JSON.stringify(response.data)}`);
+      
+      return new OneMoneyResponse(response.status, JSON.stringify(response.data));
+    } catch (error) {
+      console.error('File upload failed:', error.response?.data || error.message);
+      const statusCode = error.response?.status || 500;
+      const body = JSON.stringify(error.response?.data || { error: error.message });
+      return new OneMoneyResponse(statusCode, body);
+    }
+  }
+
+  /**
+   * Make encrypted API request - for payment operations
+   * @private
+   */
+  async makeEncryptedRequest(endpoint, businessParams) {
+    try {
+      if (!this.encryptionUtil) {
+        throw new Error('EncryptionUtil not initialized. Provide privateKey in constructor.');
+      }
+      
+      // IMPORTANT: Generate signature BEFORE encryption, from original JSON string
+      const businessParamsStr = JSON.stringify(businessParams);
+      const signature = this.encryptionUtil.generateSignature(businessParamsStr);
+      const notifyUrl = this.encryptionUtil.generateSignature(businessParams?.notifyUrl);
+
+      
       // Generate AES key and encrypt data
       const aesKey = this.encryptionUtil.generateAesKey();
-      const encryptedData = this.encryptionUtil.aesEncrypt(JSON.stringify(businessParams), aesKey);
+      const encryptedData = this.encryptionUtil.aesEncrypt(businessParamsStr, aesKey);
       const encryptedKey = this.encryptionUtil.rsaEncrypt(aesKey);
-      const signature = this.encryptionUtil.generateSignature(businessParams);
       
-      // Prepare request payload
-      const { timestamp, random } = this.encryptionUtil.generateRequestMeta();
-      const payload = {
-        timestamp,
-        random,
-        encryptKeyId: this.config.encryptKeyId,
-        merNo: this.config.merchantId,
-        encryptData: encryptedData.encryptedData,
-        encryptKey: encryptedKey,
-        signData: signature
-      };
+      // Create BaseReqDTO equivalent
+      const baseReq = new BaseReqDTO();
+      baseReq.setMerNo(this.thirdPartyId)
+            .setEncryptData(encryptedData)
+            .setEncryptKey(encryptedKey)
+            .setSignData(signature)
+            .setNotifyUrl(notifyUrl);
 
-      // Make API request
-      console.log("Payload", payload)
-      console.log("endpoint", endpoint)
-
-      const response = await axios.post(endpoint, payload);
-      return this.processResponse(response.data);
+      console.log(baseReq, "payload")
+      const response = await axios.post(`${this.baseUrl}${endpoint}`, baseReq);
+      return this.processResponse(response);
     } catch (error) {
       console.error('API request failed:', error.response?.data || error.message);
       throw error;
     }
   }
 
+  /**
+   * Process API response - matches Java response handling
+   * @private
+   */
   processResponse(response) {
-    // In a real implementation, you would decrypt the response here
-    return response;
+    // Create OneMoneyResponse like Java implementation
+    const oneMoneyResponse = new OneMoneyResponse(response.status, JSON.stringify(response.data));
+    
+    // TODO: In a real implementation, you would decrypt the response here if needed
+    // For now, return the structured response
+    return oneMoneyResponse;
   }
 
-  // C2B Push Payment
+  // Payment API Methods (require encryption)
+  
+  /**
+   * C2B Push Payment
+   * @param {Object} params - Payment parameters
+   * @returns {Promise<OneMoneyResponse>}
+   */
   async c2bPushPayment(params) {
     const requiredParams = ['transOrderNo', 'amt', 'currency', 'mobileNo', 'goodsName'];
     this.validateParams(params, requiredParams);
     
     const businessParams = {
       ...params,
-      notifyUrl: params.notifyUrl || this.config.notifyUrl
+      notifyUrl: params.notifyUrl || 'http://yourdomain.com/onemoney/notify'
     };
     
-    return this.makeRequest(this.config.apiEndpoints.c2bPush, businessParams);
+    return this.makeEncryptedRequest(this.endpoints.c2bPush, businessParams);
   }
 
-  // C2B Transaction Query
+  /**
+   * C2B Transaction Query
+   * @param {string} transOrderNo - Transaction order number
+   * @returns {Promise<OneMoneyResponse>}
+   */
   async c2bQuery(transOrderNo) {
-    return this.makeRequest(this.config.apiEndpoints.c2bQuery, { transOrderNo });
+    return this.makeEncryptedRequest(this.endpoints.c2bQuery, { transOrderNo });
   }
 
-  // B2C Payment
+  /**
+   * B2C Payment
+   * @param {Object} params - Payment parameters
+   * @returns {Promise<OneMoneyResponse>}
+   */
   async b2cPayment(params) {
     const requiredParams = ['transOrderNo', 'orderAmt', 'currency', 'recCstMobile', 'businessType'];
     this.validateParams(params, requiredParams);
@@ -106,20 +210,31 @@ class OneMoneyClient {
     const businessParams = {
       ...params,
       remark: params.remark || 'B2C Payment',
-      notifyUrl: params.notifyUrl || this.config.notifyUrl,
+      notifyUrl: params.notifyUrl || 'http://yourdomain.com/onemoney/notify',
       recCstIdNumber: params.recCstIdNumber || '000000000Z00'
     };
     
-    return this.makeRequest(this.config.apiEndpoints.b2cPayment, businessParams);
+    return this.makeEncryptedRequest(this.endpoints.b2cPayment, businessParams);
   }
 
-  // Validate required parameters
+  /**
+   * Validate required parameters
+   * @private
+   */
   validateParams(params, requiredParams) {
     requiredParams.forEach(param => {
       if (!params[param]) {
         throw new Error(`Missing required parameter: ${param}`);
       }
     });
+  }
+
+  /**
+   * Log messages - matches Java implementation
+   * @private
+   */
+  log(text) {
+    console.log('=========> ' + text);
   }
 }
 

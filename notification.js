@@ -44,8 +44,7 @@ app.post('/onemoney/notify', (req, res) => {
     // 1. Decrypt the AES key with our private key
     const aesKey = encryptionUtil.rsaDecrypt(encryptKey);
     
-    // 2. Decrypt the data with the AES key
-    // Note: You may need to adjust based on how IV is handled
+    // 2. Decrypt the data with the AES key (no IV needed for ECB mode)
     const decryptedData = encryptionUtil.aesDecrypt(encryptData, aesKey);
     
     // 3. Verify the signature

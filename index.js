@@ -1,5 +1,14 @@
 const OneMoneyClient = require('./onemoney-client');
-// Replace with your actual private key
+const EncryptionUtil = require('./encryption');
+const { OneMoneyCustomer } = require('./models');
+
+// Replace with your actual configuration
+const baseUrl = 'http://172.28.255.24:8087';
+const thirdPartyId = '1883151315996622850';
+const plainPassword = '#3Wbetlni'; // Your actual password
+const thirdPartyCredential = EncryptionUtil.encryptCredential(plainPassword);
+
+// Private key for encrypted operations
 const privateKey = `-----BEGIN RSA PRIVATE KEY-----
 MIIEpQIBAAKCAQEAuNiac4lHvaf7u1c+hGmVuFPeY6yNUStDB9CqS+LqafsMxqrY
 FVpnQ1Zyjyz476SvYuW2z/OrTKI0xi2NbJIWIPEEn/Wk5MEFRNX5gGymkTtYsrtB
@@ -28,7 +37,30 @@ Fj6QzHyyf5WWFk2ByC65mG6cs9jD0Mys3Ko5nJEyxXaNwOEHPILrTkI46Osk7OeX
 sHpPFbUtT4J0IkUWYJzAFtTIVi4J3B8VDHHCpBqDWX5IKdE+NT0A0GY=
 -----END RSA PRIVATE KEY-----`;
 
-const client = new OneMoneyClient(privateKey);
+// Create client instance matching Java constructor pattern
+const client = new OneMoneyClient(baseUrl, thirdPartyId, thirdPartyCredential, privateKey);
+
+// Example Customer Registration (like Java implementation)
+async function testCustomerRegistration() {
+  try {
+    const customer = new OneMoneyCustomer()
+      .setMobile('712984123')
+      .setFirstName('John')
+      .setLastName('Doe')
+      .setEmail('john.doe@example.com')
+      .setGender('2') // Male
+      .setDateOfBirth('01011990')
+      .setIdType('National ID')
+      .setIdNumber('63-123456A90')
+      .setNationality('ZW')
+      .setAddress('123 Main Street, Harare');
+    
+    const response = await client.registerCustomer(customer);
+    console.log('Customer Registration Response:', response.getStatusCode(), response.getBodyAsJson());
+  } catch (error) {
+    console.error('Customer Registration Error:', error);
+  }
+}
 
 // Example C2B Push Payment
 async function testC2BPush() {
@@ -38,11 +70,12 @@ async function testC2BPush() {
       amt: 100,
       currency: 'ZWG',
       mobileNo: '710939852',
-      goodsName: 'Test Product howit'
+      goodsName: 'Test Product howzit'
+      
     };
     
     const response = await client.c2bPushPayment(params);
-    console.log('C2B Push Response:', response);
+    console.log('C2B Push Response:', response.getStatusCode(), response.getBodyAsJson());
   } catch (error) {
     console.error('C2B Push Error:', error);
   }
@@ -53,7 +86,7 @@ async function testC2BQuery() {
   try {
     const transOrderNo = '1732618067884'; // Replace with actual order no
     const response = await client.c2bQuery(transOrderNo);
-    console.log('C2B Query Response:', response);
+    console.log('C2B Query Response:', response.getStatusCode(), response.getBodyAsJson());
   } catch (error) {
     console.error('C2B Query Error:', error);
   }
@@ -72,15 +105,22 @@ async function testB2CPayment() {
     };
     
     const response = await client.b2cPayment(params);
-    console.log('B2C Payment Response:', response);
+    console.log('B2C Payment Response:', response.getStatusCode(), response.getBodyAsJson());
   } catch (error) {
     console.error('B2C Payment Error:', error);
   }
 }
 
-// Run examples
+// Run examples (matches Java Main.java pattern)
 (async () => {
+  console.log('Testing OneMoney Integration - Node.js Client');
+  console.log('Encrypted Credential:', thirdPartyCredential);
+  
+  // Test customer registration first (like Java implementation)
+  // await testCustomerRegistration();
+  
+  // Test payment operations
   await testC2BPush();
   // await testC2BQuery();
-  // await testB2CPayment();
+  await testB2CPayment();
 })();
