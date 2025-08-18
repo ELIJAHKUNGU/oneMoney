@@ -139,12 +139,16 @@ class OneMoneyClient {
       const aesKey = this.encryptionUtil.generateAesKey();
       const encryptedData = this.encryptionUtil.aesEncrypt(businessParamsStr, aesKey);
       const encryptedKey = this.encryptionUtil.rsaEncrypt(aesKey);
+
+      const encryptedId = "6c12e964cd59"
+
       
       // Create BaseReqDTO equivalent
       const baseReq = new BaseReqDTO();
       baseReq.setMerNo(this.thirdPartyId)
             .setEncryptData(encryptedData)
             .setEncryptKey(encryptedKey)
+            .setEncryptKeyId(encryptedId)
             .setSignData(signature)
             .setNotifyUrl(notifyUrl);
 
