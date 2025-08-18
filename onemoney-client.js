@@ -132,7 +132,7 @@ class OneMoneyClient {
       // IMPORTANT: Generate signature BEFORE encryption, from original JSON string
       const businessParamsStr = JSON.stringify(businessParams);
       const signature = this.encryptionUtil.generateSignature(businessParamsStr);
-      const notifyUrl = this.encryptionUtil.generateSignature(businessParams?.notifyUrl);
+      const notifyUrl =  "http://165.227.202.115/api/rms/";
 
       
       // Generate AES key and encrypt data
