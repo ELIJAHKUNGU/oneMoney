@@ -120,7 +120,7 @@ async function testB2CPayment() {
   // await testCustomerRegistration();
   
   // Test payment operations
-  // await testC2BPush();
+  await testC2BPush();
   // await testC2BQuery();
-  await testB2CPayment();
+  // await testB2CPayment();
 })();
