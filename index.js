@@ -63,11 +63,20 @@ async function testCustomerRegistration() {
 }
 
 // Example C2B Push Payment
+// {
+//   "transOrderNo": "1035770533xby",
+//   "orderAmt": 2,
+//   "currency": "ZWG",
+//   "mobileNo": "712980059",
+//   "goodsName": "Wallet On POS",
+//   "notifyUrl": "http://10.44.16.51:8762/responsereceiver/TransactionResultService"
+// }
 async function testC2BPush() {
   try {
     const params = {
-      transOrderNo: Date.now().toString(),
-      amt: 100,
+      transOrderNo: "1035770533xby1",
+      // amt: 100,
+      orderAmt:100,
       currency: 'ZWG',
       mobileNo: '710939852',
       goodsName: 'Test Product howzit'

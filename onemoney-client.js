@@ -142,6 +142,7 @@ class OneMoneyClient {
       const encryptedKey = this.encryptionUtil.rsaEncrypt(aesKey);
 
       const encryptedId = "6c12e964cd59"
+      console.log(businessParams, "business params")
 
       
       // Create BaseReqDTO equivalent
@@ -183,7 +184,7 @@ class OneMoneyClient {
    * @returns {Promise<OneMoneyResponse>}
    */
   async c2bPushPayment(params) {
-    const requiredParams = ['transOrderNo', 'amt', 'currency', 'mobileNo', 'goodsName'];
+    const requiredParams = ['transOrderNo', 'orderAmt', 'currency', 'mobileNo', 'goodsName'];
     this.validateParams(params, requiredParams);
     
     const businessParams = {
