@@ -199,7 +199,7 @@ function testDecryption() {
   console.log('Testing OneMoney Integration - Node.js Client');
   
   // Test decryption function
-  testDecryption();
+  // testDecryption();
   
   // Test customer registration first (like Java implementation)
   // await testCustomerRegistration();
