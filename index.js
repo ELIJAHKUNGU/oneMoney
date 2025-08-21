@@ -259,10 +259,10 @@ function getStatusDescription(status) {
 (async () => {
   console.log('Testing OneMoney Integration - Node.js Client');
   
- testCompleteDecryption()
+//  testCompleteDecryption()
   
   // Test payment operations
-  // await testC2BPush();
+  await testC2BPush();
   // await testC2BQuery();
   // await testB2CPayment();
 })();
