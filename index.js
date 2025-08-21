@@ -88,7 +88,7 @@ async function testC2BPush() {
     const endpoint = 'http://172.28.255.24:8087/api/pay/payment/push'
     
     const response = await axios.post(`${endpoint}`, payload);
-    console.log('C2B Push Response:', response);
+    console.log('C2B Push Response:', response?.data);
   } catch (error) {
     console.error('C2B Push Error:', error);
   }
