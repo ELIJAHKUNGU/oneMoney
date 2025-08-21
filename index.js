@@ -171,16 +171,8 @@ async function testC2BPush() {
       };
       
       console.log('🔓 Decrypting OneMoney Response...');
-      const decryptResult = decryptMessage(decryptionPayload, HOWZIT_PRIVATE_KEY);
-      
-      if (decryptResult && decryptResult.originalPayload) {
-        const transaction = decryptResult.originalPayload;
-        console.log('✅ Signature Valid:', decryptResult.isValid);
-        console.log('🔍 All Fields:', JSON.stringify(transaction, null, 2));
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      } else {
-        console.log('❌ Failed to decrypt OneMoney response');
-      }
+      decryptMessage(decryptionPayload, HOWZIT_PRIVATE_KEY);
+    
     } else {
       console.log('⚠️ Response does not contain encrypted data to decrypt');
     }
