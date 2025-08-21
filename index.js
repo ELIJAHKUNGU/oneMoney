@@ -175,19 +175,6 @@ async function testC2BPush() {
       
       if (decryptResult && decryptResult.originalPayload) {
         const transaction = decryptResult.originalPayload;
-        
-        console.log('\n🎉 REAL ONEMONEY TRANSACTION RESPONSE:');
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        console.log('📋 Transaction Order No:', transaction.transOrderNo || 'N/A');
-        console.log('📋 Order Number:', transaction.orderNo || 'N/A');
-        console.log('💰 Order Amount:', transaction.orderAmt || 'N/A', transaction.currency || '');
-        console.log('💰 Actual Amount:', transaction.actAmt || 'N/A', transaction.currency || '');
-        console.log('💰 Fee Amount:', transaction.feeAmt || 'N/A', transaction.currency || '');
-        console.log('💰 Tax Amount:', transaction.taxAmt || 'N/A', transaction.currency || '');
-        console.log('📊 Order Status:', transaction.orderStatus || 'N/A', getStatusDescription(transaction.orderStatus));
-        if (transaction.timestamp) {
-          console.log('⏰ Timestamp:', new Date(transaction.timestamp).toLocaleString());
-        }
         console.log('✅ Signature Valid:', decryptResult.isValid);
         console.log('🔍 All Fields:', JSON.stringify(transaction, null, 2));
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
@@ -204,77 +191,6 @@ async function testC2BPush() {
 
 
 
-// Test complete decryption with transaction data
-function testCompleteDecryption() {
-  console.log('\n=== COMPLETE DECRYPTION TEST ===');
-  
-  // Create a sample transaction response (what OneMoney would send back)
-  const sampleTransactionData = JSON.stringify({
-    transOrderNo: "1035770533xby",
-    orderNo: "OM20241221001", 
-    orderAmt: 100.50,
-    currency: "ZWG",
-    actAmt: 98.75,
-    feeAmt: 1.75,
-    taxAmt: 0.00,
-    orderStatus: "30", // 30 = Success
-    timestamp: Date.now()
-  });
-  
-  console.log('📋 Sample Transaction Data to Encrypt:', sampleTransactionData);
-  console.log();
-  
-  // Use the key we decrypted earlier
-  const testSecretKey = "arl6k8dza25aix0j"; 
-  
-  try {
-    // Encrypt the transaction data
-    const encryptedData = encryptPayload(sampleTransactionData, testSecretKey);
-    const signature = signWithSha256(sampleTransactionData);
-    
-    console.log('🔒 Encrypted transaction data created');
-    
-    // Now test the complete decryption with full response object
-    const testResponse = {
-      encryptData: encryptedData,
-      encryptKey: 'RUZaSVNCRjdaQnNYNithYlVuckVtbiswZm9LT0NrZEExTTFwQkNqaEVCdkx2VUU4dkxkdDdUS1lRSnhycUFYSFQ4SGdTdnh5UE1tRVpwY1pmMWxILzQ1bCtHK1ZRbnZBcGNma1B6VEFYNWorUm1rYzA1a0MwQk53aVZ1UWkwUGhkVnZ4MjhkTFFjSFdqUEk1bnZFOEM2eG5JZ2Z3RXRLOUExQmlXZUJyTmlJYUtNUGt6VnYwbjlnOUpuVHRMSFI0WmRFUCtVTHJiWXA0U0VZZDNBVElCWDJoeWxTWXlCcWIrWWYvVExSM2ZZUjdvdkxMRlVWbFVPYkJjRnV5ZWpLYktLNWxCbkViS0dCSFk0R2xBSCs1cHhuQi8vWXJaY2JSRE1mTHdPQjg3TjZWNTh3VjBGUEFCQzVhS1Z2ZU9QODhGc0dxSUlWSUtJZlN4WWcvVTI5dmlnPT0=',
-      signData: signature
-    };
-    
-    console.log('🔓 DECRYPTING COMPLETE MESSAGE...\n');
-    
-    // Use the complete decryptMessage function
-    const result = decryptMessage(testResponse, HOWZIT_PRIVATE_KEY);
-    
-    if (result && result.originalPayload) {
-      const transaction = result.originalPayload;
-      console.log("transaction",transaction)
-      
-  
-      
-      return transaction;
-    } else {
-      console.log('❌ Failed to decrypt transaction message');
-      return null;
-    }
-    
-  } catch (error) {
-    console.error('❌ DECRYPTION FAILED:', error.message);
-    return null;
-  }
-}
-
-// Helper function to describe order status
-function getStatusDescription(status) {
-  const statusMap = {
-    '10': 'Initialization',
-    '20': 'Payment in progress', 
-    '30': 'Success',
-    '40': 'Failure',
-    '50': 'Order closed'
-  };
-  return statusMap[status] || 'Unknown status';
-}
 
 (async () => {
   console.log('Testing OneMoney Integration - Node.js Client');
