@@ -160,12 +160,42 @@ async function testC2BPush() {
     console.log('C2B Push Response:', response?.data);
     
     // Test decryption if we get a response
-    if (response?.data) {
+    if (response?.data && response.data.data && response.data.encryptKey) {
       console.log('\n--- Testing Decryption ---');
-      const decryptResult = decryptMessage(response.data, HOWZIT_PRIVATE_KEY);
-      if (decryptResult) {
-        console.log('Decryption successful:', decryptResult);
+      
+      // Build the response object in the expected format
+      const decryptionPayload = {
+        encryptData: response.data.data,
+        encryptKey: response.data.encryptKey,
+        signData: response.data.signData
+      };
+      
+      console.log('🔓 Decrypting OneMoney Response...');
+      const decryptResult = decryptMessage(decryptionPayload, HOWZIT_PRIVATE_KEY);
+      
+      if (decryptResult && decryptResult.originalPayload) {
+        const transaction = decryptResult.originalPayload;
+        
+        console.log('\n🎉 REAL ONEMONEY TRANSACTION RESPONSE:');
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('📋 Transaction Order No:', transaction.transOrderNo || 'N/A');
+        console.log('📋 Order Number:', transaction.orderNo || 'N/A');
+        console.log('💰 Order Amount:', transaction.orderAmt || 'N/A', transaction.currency || '');
+        console.log('💰 Actual Amount:', transaction.actAmt || 'N/A', transaction.currency || '');
+        console.log('💰 Fee Amount:', transaction.feeAmt || 'N/A', transaction.currency || '');
+        console.log('💰 Tax Amount:', transaction.taxAmt || 'N/A', transaction.currency || '');
+        console.log('📊 Order Status:', transaction.orderStatus || 'N/A', getStatusDescription(transaction.orderStatus));
+        if (transaction.timestamp) {
+          console.log('⏰ Timestamp:', new Date(transaction.timestamp).toLocaleString());
+        }
+        console.log('✅ Signature Valid:', decryptResult.isValid);
+        console.log('🔍 All Fields:', JSON.stringify(transaction, null, 2));
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      } else {
+        console.log('❌ Failed to decrypt OneMoney response');
       }
+    } else {
+      console.log('⚠️ Response does not contain encrypted data to decrypt');
     }
   } catch (error) {
     console.error('C2B Push Error:', error);
