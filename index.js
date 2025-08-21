@@ -248,19 +248,9 @@ function testCompleteDecryption() {
     
     if (result && result.originalPayload) {
       const transaction = result.originalPayload;
+      console.log("transaction",transaction)
       
-      console.log('\n🎉 FINAL DECRYPTED TRANSACTION MESSAGE:');
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('📋 Transaction Order No:', transaction.transOrderNo);
-      console.log('📋 Order Number:', transaction.orderNo);
-      console.log('💰 Order Amount:', transaction.orderAmt, transaction.currency);
-      console.log('💰 Actual Amount:', transaction.actAmt, transaction.currency);
-      console.log('💰 Fee Amount:', transaction.feeAmt, transaction.currency);
-      console.log('💰 Tax Amount:', transaction.taxAmt, transaction.currency);
-      console.log('📊 Order Status:', transaction.orderStatus, getStatusDescription(transaction.orderStatus));
-      console.log('⏰ Timestamp:', new Date(transaction.timestamp).toLocaleString());
-      console.log('✅ Signature Valid:', result.isValid);
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  
       
       return transaction;
     } else {
