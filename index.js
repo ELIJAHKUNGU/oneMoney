@@ -119,10 +119,10 @@ function signWithSha256(content) {
 const TIMESTAMP = Date.now();
 const jsonPayload1 = JSON.stringify({
   transOrderNo: Date.now().toString(),
-  orderAmt: 2,
+  orderAmt: 100,
   currency: "ZWG",
   mobileNo: "712980059",
-  goodsName: "Wallet On POS",
+  goodsName: "Wallet On POS 1",
   notifyUrl: "http://10.44.16.51:8762/responsereceiver/TransactionResultService",
 });
 
