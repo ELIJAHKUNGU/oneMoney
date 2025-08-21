@@ -48,8 +48,9 @@ function signWithSha256(content) {
 }
 
 // --- Example usage ---
+const TIMESTAMP = Date.now();
 const jsonPayload1 = JSON.stringify({
-  transOrderNo: "1035770533xby",
+  transOrderNo: Date.now().toString(),
   orderAmt: 2,
   currency: "ZWG",
   mobileNo: "712980059",
@@ -58,7 +59,7 @@ const jsonPayload1 = JSON.stringify({
 });
 
 const secretKey = "mysampleaeskey16"; // must be 16 chars (128-bit)
-const TIMESTAMP = Date.now();
+
 
 // Encrypt
 const encryptData = encryptPayload(jsonPayload1, secretKey);
