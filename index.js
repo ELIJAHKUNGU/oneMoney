@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const config = require('./config/constants');
 const routes = require('./routes');
+const dbConnection = require("./dbConnection/db.connection")
 
 // Create Express app
 const app = express();
@@ -16,6 +17,7 @@ app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
   next();
 });
+dbConnection()
 
 // Routes
 app.use('/', routes);
