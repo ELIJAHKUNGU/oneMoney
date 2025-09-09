@@ -10,18 +10,18 @@ const logSchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    enum: [
-      'payment', 
-      'callback', 
-      'encryption', 
-      'api', 
-      'database', 
-      'auth', 
-      'validation', 
-      'system',
-      'external_api',
-      'security'
-    ],
+    // enum: [
+    //   'payment', 
+    //   'callback', 
+    //   'encryption', 
+    //   'api', 
+    //   'database', 
+    //   'auth', 
+    //   'validation', 
+    //   'system',
+    //   'external_api',
+    //   'security'
+    // ],
     required: true,
     index: true
   },
