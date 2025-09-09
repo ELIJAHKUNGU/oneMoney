@@ -48,7 +48,7 @@ const oneTransactionSchema = new mongoose.Schema({
   // Status tracking
   orderStatus: {
     type: String,
-    enum: ['0', '1', '2', '3', '4', '5'], // 0=pending, 1=success, 2=failed, 3=cancelled, 4=processing, 5=expired
+    // enum: ['0', '1', '2', '3', '4', '5'], // 0=pending, 1=success, 2=failed, 3=cancelled, 4=processing, 5=expired
     default: '0'
   },
   statusDescription: {
